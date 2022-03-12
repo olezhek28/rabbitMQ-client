@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"log"
+	"time"
 
 	"github.com/streadway/amqp"
 )
@@ -34,7 +36,7 @@ func main() {
 	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer
-		true,   // auto-ack
+		false,  // auto-ack надо ли подтверждать приемку и обработку (false - надо)
 		false,  // exclusive
 		false,  // no-local
 		false,  // no-wait
@@ -47,6 +49,12 @@ func main() {
 	go func() {
 		for d := range msgs {
 			log.Printf("Received a message: %s", d.Body)
+			dotCount := bytes.Count(d.Body, []byte("."))
+			log.Printf("Time: %d", dotCount)
+			t := time.Duration(dotCount)
+			time.Sleep(t * time.Second)
+			log.Printf("Done")
+			d.Ack(false) // подтверждение приемки и обработки сообщения
 		}
 	}()
 

@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"os"
+	"strings"
 
 	"github.com/streadway/amqp"
 )
@@ -12,7 +14,19 @@ func failOnError(err error, msg string) {
 	}
 }
 
+func bodyFrom(args []string) string {
+	var s string
+	if (len(args) < 2) || os.Args[1] == "" {
+		s = "hello"
+	} else {
+		s = strings.Join(args[1:], ".")
+	}
+	return s
+}
+
 func main() {
+	body := bodyFrom(os.Args)
+
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "failed to connect to RabbitMQ")
 	defer conn.Close()
@@ -31,7 +45,6 @@ func main() {
 	)
 	failOnError(err, "Failed to declare a queue")
 
-	body := "Hello World!"
 	err = ch.Publish(
 		"",     // exchange
 		q.Name, // routing key
